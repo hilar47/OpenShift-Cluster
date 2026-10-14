@@ -81,3 +81,4 @@ spec:
           value: |
             oc create deployment oc-pipelines-app --image=$(params.build-image) --dry-run=client -o yaml | oc apply -f -
             oc rollout status deployment/oc-pipelines-app
+            oc get service oc-pipelines-app >/dev/null 2>&1 || oc expose deployment oc-pipelines-app --port=8000
