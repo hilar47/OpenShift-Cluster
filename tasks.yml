@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cleanup
+spec:
+  description: Clean the shared workspace before a run.
+  workspaces:
+    - name: source
+  steps:
+    - name: remove
+      image: alpine:3
+      script: |
+        #!/bin/sh
+        set -e
+        echo "Cleaning workspace: $(workspaces.source.path)"
+        rm -rf $(workspaces.source.path)/* $(workspaces.source.path)/.[!.]* 2>/dev/null || true
+        ls -la $(workspaces.source.path)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: nose
+spec:
+  description: Run unit tests with nose.
+  workspaces:
+    - name: source
+  params:
+    - name: args
+      description: Arguments to pass to nosetests
+      type: string
+      default: "-v"
+  steps:
+    - name: nosetests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+        python -m pip install --upgrade pip wheel
+        pip install -r requirements.txt
+        nosetests $(params.args)
